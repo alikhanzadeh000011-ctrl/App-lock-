@@ -9,7 +9,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Unzip project
-        run: unzip -q AppLock.zip
+        run: |
+          ZIP=$(find . -maxdepth 3 -iname "*.zip" | head -n1)
+          echo "Found: $ZIP"
+          unzip -q "$ZIP" -d project
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -18,9 +21,11 @@ jobs:
         with:
           gradle-version: 8.5
       - name: Build debug APK
-        working-directory: AppLock
-        run: gradle assembleDebug --no-daemon
+        run: |
+          DIR=$(dirname "$(find project -name settings.gradle.kts | head -n1)")
+          cd "$DIR"
+          gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
           name: AppLock-debug
-          path: AppLock/app/build/outputs/apk/debug/app-debug.apk
+          path: project/**/app-debug.apk
